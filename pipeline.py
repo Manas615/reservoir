@@ -167,7 +167,7 @@ def main():
         print("  Use with: model.predict(features)")
 
     print("\nNext Steps:")
-    print("  1. Use river_weather.py for real-time predictions")
+    print("  1. Use river_weather_predictions.py for real-time predictions")
     print("  2. Monitor model performance over time")
     print("  3. Retrain quarterly with new historical data")
     print("\n" + "="*70 + "\n")

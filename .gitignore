@@ -8,5 +8,15 @@ __pycache__/
 .env
 .env.*
 
+historical_weather.csv
+training_dataset.csv
+rainfall_model.pkl
+rainfall_predictions.csv
+weather_data.csv
+data/raw/
+data/processed/
+data/models/
+data/outputs/
+
 .DS_Store
 Thumbs.db
