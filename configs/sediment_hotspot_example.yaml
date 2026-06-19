@@ -1,0 +1,34 @@
+reservoir:
+  name: example_reservoir
+  aoi_geojson: data/raw/aoi/example_reservoir.geojson
+
+public_datasets:
+  satellite:
+    - Sentinel-2 surface reflectance
+    - Landsat Collection 2 Level 2
+  dem:
+    - SRTM DEM
+    - ASTER DEM
+  landuse:
+    - ESA WorldCover
+    - MODIS Land Cover
+
+rainfall_input:
+  path: rainfall_predictions.csv
+  note: Existing rainfall forecast output. Do not retrain rainfall forecasting here.
+
+flow_input:
+  required_columns:
+    - timestamp
+    - river_discharge
+    - reservoir_inflow
+    - water_velocity
+
+training_manifest_columns:
+  - satellite_stack
+  - terrain_stack
+  - landuse_stack
+  - flow_sequence
+  - rain_features
+  - target_heatmap
+  - zone_risk
