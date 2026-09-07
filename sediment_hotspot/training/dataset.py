@@ -1,56 +1,20 @@
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
-
 from sediment_hotspot.utils.io import require_file
-
-
 class SedimentHotspotDataset(Dataset):
-    """Dataset driven by real preprocessed artifact paths listed in a manifest CSV."""
-
-    REQUIRED_COLUMNS = [
-        "satellite_stack",
-        "terrain_stack",
-        "landuse_stack",
-        "flow_sequence",
-        "rain_features",
-        "target_heatmap",
-        "zone_risk",
-    ]
-
-    def __init__(self, manifest_csv: str | Path):
-        self.manifest = pd.read_csv(require_file(manifest_csv, "training manifest"))
-        missing = [col for col in self.REQUIRED_COLUMNS if col not in self.manifest.columns]
-        if missing:
-            raise ValueError(f"Training manifest is missing columns: {missing}")
-
-    def __len__(self) -> int:
-        return len(self.manifest)
-
-    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
-        row = self.manifest.iloc[idx]
-        return {
-            "satellite": _load_tensor(row["satellite_stack"]),
-            "terrain": _load_tensor(row["terrain_stack"]),
-            "landuse": _load_tensor(row["landuse_stack"]),
-            "flow_sequence": _load_tensor(row["flow_sequence"]),
-            "rain_features": _load_tensor(row["rain_features"]),
-            "target_heatmap": _load_heatmap(row["target_heatmap"]),
-            "zone_risk": _load_tensor(row["zone_risk"]),
-        }
-
-
-def _load_tensor(path: str | Path) -> torch.Tensor:
-    return torch.from_numpy(np.load(require_file(path, "dataset tensor")).astype("float32"))
-
-
-def _load_heatmap(path: str | Path) -> torch.Tensor:
-    tensor = _load_tensor(path)
-    if tensor.ndim == 2:
-        return tensor.unsqueeze(0)
-    if tensor.ndim == 3:
-        return tensor
-    raise ValueError(f"Target heatmap must have 2 or 3 dimensions: {path}")
+ REQUIRED_COLUMNS=["satellite_stack","terrain_stack","landuse_stack","flow_sequence","rain_features","target_heatmap","zone_risk"]
+ OPTIONAL={"dsdi_features":(11,),"graph_nodes":(1,7),"graph_adjacency":(1,1),"previous_heatmap":(1,128,128)}
+ def __init__(self,manifest_csv):
+  self.manifest=pd.read_csv(require_file(manifest_csv,"training manifest")); missing=[c for c in self.REQUIRED_COLUMNS if c not in self.manifest];
+  if missing: raise ValueError(f"Training manifest is missing columns: {missing}")
+ def __len__(self): return len(self.manifest)
+ def __getitem__(self,i):
+  r=self.manifest.iloc[i]; out={"satellite":_load(r.satellite_stack),"terrain":_load(r.terrain_stack),"landuse":_load(r.landuse_stack),"flow_sequence":_load(r.flow_sequence),"rain_features":_load(r.rain_features),"target_heatmap":_heat(r.target_heatmap),"zone_risk":_load(r.zone_risk)}
+  for key,shape in self.OPTIONAL.items(): out[key]=_load(r[key]) if key in r and isinstance(r[key],str) and Path(r[key]).exists() else torch.zeros(shape)
+  return out
+def _load(path): return torch.from_numpy(np.load(require_file(path,"dataset tensor")).astype("float32"))
+def _heat(path):
+ x=_load(path); return x.unsqueeze(0) if x.ndim==2 else x
