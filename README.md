@@ -1,73 +1,145 @@
-# Reservoir Rainfall and Sediment Hotspot Prediction System
+# Reservoir Rainfall and Sediment Hotspot Prediction
 
-An end-to-end multi-modal deep learning and physics-informed framework for predicting reservoir sediment deposition hotspots, zone-wise sedimentation risks, and upstream rainfall forcing.
+## A Multi-Modal AI System for Spatial Sediment Risk Analysis
 
----
+An AI-based environmental monitoring and decision-support system that combines short-term rainfall forecasting with multimodal sediment hotspot prediction inside reservoirs.
 
-## 1. Algorithmic Contributions
-The sediment prediction subsystem introduces the following specific algorithmic components:
+The system integrates meteorological data, satellite imagery, terrain information, land-use information, river-flow observations, graph connectivity, and derived physical indicators. Its primary outputs are spatial sediment-risk heatmaps, zone-wise risk scores, uncertainty estimates, explainability outputs, and counterfactual scenario analysis.
 
-1. **Dynamic Sediment Deposition Index (DSDI)**: A dynamic prior index combining 11 environmental factors (rainfall forcing, river discharge, reservoir inflow, water velocity, terrain slope, curvature, erosion susceptibility, land-use probability, satellite NDTI turbidity, and plume intensity) with learned adaptive gating.
-2. **Causal Attention Fusion (CAF)**: Multi-modal fusion combining learned feature relevance, a domain causal prior matrix (Rainfall $\to$ Flow $\to$ Erosion $\to$ Transport $\to$ Deposition), and DSDI compatibility.
-3. **Physics-Informed Sediment Loss (PISL)**: Differentiable loss constraints enforcing physical relationships among sediment supply, transport capacity, flow velocity, and deposition drop.
-4. **Adaptive Hotspot Thresholding (AHT)**: Dynamic thresholding conditioned on hydrological regime, rainfall wetness, seasonality, and local historical turbidity variance.
-5. **Watershed-to-Reservoir Graph Network (WR-GNN)**: Graph attention network modeling topological and hydrological connectivity from upstream watershed tributaries to reservoir zones.
-6. **Multi-Modal Contrastive Alignment (MMCA)**: InfoNCE contrastive representation learning aligning cross-modal embeddings for identical hydrological events while separating discordant contexts.
-7. **Uncertainty-Aware Hotspot Prediction (UAHP)**: Monte Carlo Dropout inference providing pixel-wise mean risk, epistemic uncertainty maps, and automated risk-confidence triage categories (High Risk + High Confidence, High Risk + Low Confidence, Low Risk).
-8. **Temporal Consistency Constraint**: Regularization penalizing abrupt, unphysical spatial changes between consecutive observation timestamps conditioned on environmental forcing change.
+The project is designed as a research-oriented prototype with an emphasis on reproducibility, multimodal learning, spatial reasoning, uncertainty awareness, and interpretable environmental decision support.
 
 ---
 
-## 2. Preserved Rainfall Subsystem
-The upstream rainfall forecasting subsystem is fully preserved:
-- Open-Meteo historical & real-time weather integration
-- Lagged and rolling feature engineering (`feature_engineering.py`)
-- XGBoost forecasting model (`rainfall_model.pkl`)
-- Real-time zone forecasts saved to `rainfall_predictions.csv`
-- Rainfall feature adapter for sediment fusion compatibility
+## 1. Project Overview
+
+Reservoir sedimentation progressively reduces usable storage capacity and can affect irrigation, hydropower, water supply, flood management, and long-term reservoir operation.
+
+Conventional sediment assessment is frequently based on periodic surveys or aggregate sediment estimates. This project instead focuses on predicting **where sedimentation risk is likely to be concentrated** and how that risk may change under different environmental conditions.
+
+The system has two connected stages:
+
+1. **Rainfall Forecasting**
+   - Historical Open-Meteo weather data is used to train an XGBoost model for next-hour rainfall prediction.
+   - Live weather information is converted into rainfall predictions for 14 river zones.
+
+2. **Sediment Hotspot Prediction**
+   - Predicted rainfall is combined with satellite, terrain, land-use, flow, graph, and physical features.
+   - A multimodal PyTorch model produces pixel-level hotspot probabilities and zone-level sediment risk.
+   - Additional modules provide physical constraints, causal structure, graph propagation, contrastive alignment, uncertainty estimation, explainability, and counterfactual analysis.
 
 ---
 
-## 3. Quick Start & Execution
+## 2. Key Capabilities
 
-### A. Run Unit Tests
-```bash
-python tests/test_sediment_hotspot.py
-```
+### Rainfall Forecasting
 
-### B. Generate Multi-Modal Training Data & Manifest
-```bash
-python scripts/generate_synthetic_data.py
-```
+- Open-Meteo historical and forecast data integration
+- Next-hour rainfall prediction using XGBoost
+- Lag, rolling, trend, temporal, and rainfall-severity features
+- Live prediction pipeline
+- Rainfall alerts based on severity categories
 
-### C. Train the Full Proposed Fusion Model
-```bash
-python scripts/train_sediment_fusion.py --manifest data/processed/manifest.csv --epochs 15
-```
+### Multimodal Sediment Prediction
 
-### D. Run Baseline Models Comparison
-```bash
-python sediment_hotspot/baselines.py --manifest data/processed/manifest.csv --output results/baseline_results.csv
-```
+The sediment model integrates seven information streams:
 
-### E. Run Ablation Experiments
-```bash
-python sediment_hotspot/ablation.py --manifest data/processed/manifest.csv --output results/ablation_results.csv
-```
+1. Satellite imagery
+2. Terrain
+3. Land use
+4. River flow
+5. Rainfall
+6. Watershed/reservoir graph information
+7. Dynamic Sediment Deposition Index (DSDI)
 
-### F. Run Inference & Export Monitoring Artifacts
-```bash
-python scripts/predict_sediment_hotspots.py --model data/models/sediment_fusion_model.pt --sample data/processed/sample_0.npz --output-dir data/outputs
-```
+### Research-Oriented Components
 
-### G. Launch Interactive Dashboard
-```bash
-streamlit run dashboards/sediment_dashboard.py
-```
+- Dynamic Sediment Deposition Index (DSDI)
+- Physics-Informed Sediment Loss (PISL)
+- Causal Attention Fusion
+- Watershed/Reservoir Graph Neural Network
+- Multi-Modal Contrastive Alignment
+- Temporal Consistency Loss
+- Adaptive Hotspot Thresholding
+- Uncertainty-Aware Hotspot Prediction
+- Counterfactual Sediment Dynamics / intervention analysis
+- Explainability through attention and gradient-based methods
+- Sediment source-to-hotspot attribution can be added as a graph-based extension
 
 ---
 
-## 4. Evaluation Outputs
-- `results/baseline_results.csv`: Comparison across Random Forest, XGBoost, CNN-only, BiLSTM-only, CNN+BiLSTM, Standard Attention, and Proposed Full Model on an identical test split.
-- `results/ablation_results.csv`: Step-by-step ablation metrics validating the marginal contribution of each proposed algorithm.
-- `data/outputs/`: Inference maps (`future_sediment_hotspot_heatmap.npy`, `dsdi_heatmap.npy`, `uncertainty_heatmap.npy`, `zone_sediment_risk.csv`, `modality_attention.csv`, `causal_attention.csv`, `risk_timeline.csv`, `prediction_metadata.json`).
+## 3. End-to-End Architecture
+
+```text
+                         RAINFALL SUBSYSTEM
+
+┌───────────────────────┐
+│ Open-Meteo Historical │
+│ Weather Data          │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│ Feature Engineering   │
+│ Lags / Rolling /      │
+│ Trends / Time         │
+└──────────┬────────────┘
+           │
+           ▼
+┌───────────────────────┐
+│ XGBoost Regressor     │
+│ Next-Hour Rainfall    │
+└──────────┬────────────┘
+           │
+           ├──────────────► rainfall_model.pkl
+           │
+           ▼
+┌───────────────────────┐
+│ Live Open-Meteo       │
+│ Forecast Inference    │
+└──────────┬────────────┘
+           │
+           ▼
+    rainfall_predictions.csv
+           │
+           │
+           ▼
+
+                    SEDIMENT SUBSYSTEM
+
+ ┌────────────┐  ┌──────────┐  ┌────────────┐
+ │ Satellite  │  │   DEM    │  │ Land Cover │
+ └─────┬──────┘  └────┬─────┘  └─────┬──────┘
+       │              │              │
+       ▼              ▼              ▼
+ ┌────────────┐  ┌──────────┐  ┌────────────┐
+ │ Satellite  │  │ Terrain  │  │ Land-Use   │
+ │ Features   │  │ Features │  │ Features   │
+ └─────┬──────┘  └────┬─────┘  └─────┬──────┘
+       │              │              │
+       └──────────────┼──────────────┘
+                      │
+ ┌────────────┐  ┌────────────┐  ┌────────────┐
+ │ River Flow │  │ Rainfall   │  │ DSDI       │
+ └─────┬──────┘  └─────┬──────┘  └─────┬──────┘
+       │               │               │
+       └───────────────┼───────────────┘
+                       ▼
+              ┌─────────────────────┐
+              │ Multimodal Fusion   │
+              │ CNN + LSTM + GNN +  │
+              │ DSDI + Attention    │
+              └──────────┬──────────┘
+                         │
+          ┌──────────────┼───────────────┐
+          │              │               │
+          ▼              ▼               ▼
+   Hotspot Heatmap   Zone Risk      DSDI / Attention
+          │              │               │
+          └──────────────┼───────────────┘
+                         ▼
+              ┌─────────────────────┐
+              │ Uncertainty / XAI   │
+              │ / Counterfactuals   │
+              └──────────┬──────────┘
+                         ▼
+                Streamlit Dashboard
