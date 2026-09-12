@@ -1,0 +1,15 @@
+\begin{tabular}{rrrrrrrrrrrrrrrlrrrrrrrr}
+\toprule
+iou & dice & precision & recall & f1 & high_risk_detection_rate & false_hotspot_rate & brier_score & ece & auc & pr_auc & zone_mae & zone_rmse & zone_r2 & centroid_displacement & ablation_stage & use_dsdi & use_causal_attention & use_gnn & use_contrastive & use_uncertainty & use_physics_loss & use_temporal_constraint & use_counterfactual_loss \\
+\midrule
+0.098315 & 0.179028 & 0.135714 & 0.262952 & 0.179028 & 0.262952 & 0.116401 & 0.182777 & 0.348390 & 0.646897 & 0.117927 & 0.342255 & 0.357830 & -6.277212 & 9.637444 & Full Proposed Model + CSDN & True & True & True & True & True & True & True & True \\
+0.089502 & 0.164299 & 0.123052 & 0.247144 & 0.164299 & 0.247144 & 0.122428 & 0.197699 & 0.370169 & 0.634223 & 0.107486 & 0.315450 & 0.332895 & -5.298313 & 8.865482 & - CSDN Loss & True & True & True & True & True & True & True & False \\
+0.085758 & 0.157970 & 0.121416 & 0.226013 & 0.157970 & 0.226013 & 0.113681 & 0.187954 & 0.356124 & 0.640931 & 0.106839 & 0.319767 & 0.340178 & -5.576929 & 10.216530 & - Physics Loss (PISL) & True & True & True & True & True & False & True & True \\
+0.088651 & 0.162864 & 0.124719 & 0.234622 & 0.162864 & 0.234622 & 0.114454 & 0.188659 & 0.357046 & 0.639508 & 0.106752 & 0.311772 & 0.326574 & -5.061427 & 9.702306 & - Causal Attention (CAF) & True & False & True & True & True & True & True & True \\
+0.088115 & 0.161959 & 0.121514 & 0.242761 & 0.161959 & 0.242761 & 0.121993 & 0.190436 & 0.359451 & 0.636791 & 0.103535 & 0.334954 & 0.351135 & -6.007413 & 9.024955 & - WR-GNN & True & True & False & True & True & True & True & True \\
+0.090263 & 0.165580 & 0.127382 & 0.236500 & 0.165580 & 0.236500 & 0.112615 & 0.180731 & 0.345009 & 0.642979 & 0.108213 & 0.297142 & 0.315672 & -4.663451 & 9.156476 & - MMCA Contrastive & True & True & True & False & True & True & True & True \\
+0.091664 & 0.167935 & 0.123848 & 0.260761 & 0.167935 & 0.260761 & 0.128227 & 0.201369 & 0.375370 & 0.635433 & 0.107831 & 0.342043 & 0.358005 & -6.284316 & 9.423444 & - Temporal Consistency & True & True & True & True & True & True & False & True \\
+0.094867 & 0.173294 & 0.130158 & 0.259195 & 0.173294 & 0.259195 & 0.120405 & 0.199598 & 0.373093 & 0.635709 & 0.115681 & 0.361221 & 0.378580 & -7.145662 & 9.554303 & - DSDI & False & True & True & True & True & True & True & True \\
+0.095637 & 0.174578 & 0.142588 & 0.225074 & 0.174578 & 0.225074 & 0.094076 & 0.173798 & 0.335391 & 0.657053 & 0.123009 & 0.285523 & 0.298247 & -4.055468 & 9.643089 & Baseline (CNN+BiLSTM) & False & False & False & False & False & False & False & False \\
+\bottomrule
+\end{tabular}

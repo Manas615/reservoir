@@ -1,147 +1,73 @@
-# Reservoir Rainfall and Sediment Hotspot Prediction
+# Reservoir Rainfall and Sediment Hotspot Prediction System
 
-Machine learning pipeline for river-zone rainfall forecasting, with an optional sediment hotspot prediction module for reservoir monitoring.
+An end-to-end multi-modal deep learning and physics-informed framework for predicting reservoir sediment deposition hotspots, zone-wise sedimentation risks, and upstream rainfall forcing.
 
-The rainfall model is trained from historical Open-Meteo weather data instead of repeated live samples. The sediment module can then consume rainfall predictions alongside satellite imagery, flow, terrain, and land-use features.
+---
 
-## Features
+## 1. Algorithmic Contributions
+The sediment prediction subsystem introduces the following specific algorithmic components:
 
-- Downloads hourly historical weather data for 14 Indian river zones.
-- Builds lag, rolling average, trend, and time-based rainfall features.
-- Trains an XGBoost regressor for next-hour rainfall prediction.
-- Produces live rainfall predictions from current Open-Meteo forecast data.
-- Includes a separate PyTorch-based sediment hotspot package. See `SEDIMENT_HOTSPOT.md`.
+1. **Dynamic Sediment Deposition Index (DSDI)**: A dynamic prior index combining 11 environmental factors (rainfall forcing, river discharge, reservoir inflow, water velocity, terrain slope, curvature, erosion susceptibility, land-use probability, satellite NDTI turbidity, and plume intensity) with learned adaptive gating.
+2. **Causal Attention Fusion (CAF)**: Multi-modal fusion combining learned feature relevance, a domain causal prior matrix (Rainfall $\to$ Flow $\to$ Erosion $\to$ Transport $\to$ Deposition), and DSDI compatibility.
+3. **Physics-Informed Sediment Loss (PISL)**: Differentiable loss constraints enforcing physical relationships among sediment supply, transport capacity, flow velocity, and deposition drop.
+4. **Adaptive Hotspot Thresholding (AHT)**: Dynamic thresholding conditioned on hydrological regime, rainfall wetness, seasonality, and local historical turbidity variance.
+5. **Watershed-to-Reservoir Graph Network (WR-GNN)**: Graph attention network modeling topological and hydrological connectivity from upstream watershed tributaries to reservoir zones.
+6. **Multi-Modal Contrastive Alignment (MMCA)**: InfoNCE contrastive representation learning aligning cross-modal embeddings for identical hydrological events while separating discordant contexts.
+7. **Uncertainty-Aware Hotspot Prediction (UAHP)**: Monte Carlo Dropout inference providing pixel-wise mean risk, epistemic uncertainty maps, and automated risk-confidence triage categories (High Risk + High Confidence, High Risk + Low Confidence, Low Risk).
+8. **Temporal Consistency Constraint**: Regularization penalizing abrupt, unphysical spatial changes between consecutive observation timestamps conditioned on environmental forcing change.
 
-## Project Layout
+---
 
-```text
-reservoir/
-├── fetch_historical_weather.py      # Download historical Open-Meteo data
-├── feature_engineering.py           # Build ML training features
-├── train_model.py                   # Train rainfall model
-├── river_weather_predictions.py     # Run live rainfall prediction
-├── pipeline.py                      # Orchestrate fetch, feature, train steps
-├── sediment_pipeline.py             # Sediment workflow entry point
-├── sediment_hotspot/                # Sediment hotspot package
-├── scripts/                         # Preprocessing and training helpers
-├── dashboards/                      # Streamlit dashboard
-├── configs/                         # Example sediment config
-└── requirements.txt
-```
+## 2. Preserved Rainfall Subsystem
+The upstream rainfall forecasting subsystem is fully preserved:
+- Open-Meteo historical & real-time weather integration
+- Lagged and rolling feature engineering (`feature_engineering.py`)
+- XGBoost forecasting model (`rainfall_model.pkl`)
+- Real-time zone forecasts saved to `rainfall_predictions.csv`
+- Rainfall feature adapter for sediment fusion compatibility
 
-Generated data and model outputs are intentionally ignored by Git:
+---
 
-```text
-historical_weather.csv
-training_dataset.csv
-rainfall_model.pkl
-rainfall_predictions.csv
-data/raw/
-data/processed/
-data/models/
-data/outputs/
-```
+## 3. Quick Start & Execution
 
-## Setup
-
+### A. Run Unit Tests
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+python tests/test_sediment_hotspot.py
 ```
 
-Open-Meteo does not require an API key.
-
-## Rainfall Pipeline
-
-Run the full training workflow:
-
+### B. Generate Multi-Modal Training Data & Manifest
 ```bash
-python pipeline.py --all
+python scripts/generate_synthetic_data.py
 ```
 
-Or run each stage separately:
-
+### C. Train the Full Proposed Fusion Model
 ```bash
-python pipeline.py --fetch
-python pipeline.py --engineer
-python pipeline.py --train
+python scripts/train_sediment_fusion.py --manifest data/processed/manifest.csv --epochs 15
 ```
 
-Expected generated files:
-
-```text
-historical_weather.csv      # Raw hourly weather data
-training_dataset.csv        # Engineered model features
-rainfall_model.pkl          # Trained XGBoost model
-```
-
-After training, run live predictions:
-
+### D. Run Baseline Models Comparison
 ```bash
-python river_weather_predictions.py
+python sediment_hotspot/baselines.py --manifest data/processed/manifest.csv --output results/baseline_results.csv
 ```
 
-This writes `rainfall_predictions.csv`, which can also be used as an input feature source for sediment hotspot prediction.
+### E. Run Ablation Experiments
+```bash
+python sediment_hotspot/ablation.py --manifest data/processed/manifest.csv --output results/ablation_results.csv
+```
 
-## River Zones
+### F. Run Inference & Export Monitoring Artifacts
+```bash
+python scripts/predict_sediment_hotspots.py --model data/models/sediment_fusion_model.pt --sample data/processed/sample_0.npz --output-dir data/outputs
+```
 
-Krishna:
+### G. Launch Interactive Dashboard
+```bash
+streamlit run dashboards/sediment_dashboard.py
+```
 
-- `K1_Mahabaleshwar` - 17.9237, 73.6586
-- `K2_Sangli_Almatti` - 16.8544, 74.5642
-- `K3_Raichur_Kurnool` - 16.2076, 77.3463
-- `K4_Nagarjuna_Sagar` - 16.5750, 79.3167
-- `K5_Vijayawada_Delta` - 16.5062, 80.6480
+---
 
-Narmada:
-
-- `N1_Amarkantak` - 22.6747, 81.7590
-- `N2_Jabalpur` - 23.1815, 79.9864
-- `N3_Omkareshwar` - 22.2452, 76.1510
-- `N4_Bharuch` - 21.7051, 72.9959
-
-Kaveri:
-
-- `C1_Talakaveri` - 12.3855, 75.4894
-- `C2_Kodagu` - 12.3375, 75.8069
-- `C3_Mysuru_KRS` - 12.2958, 76.6394
-- `C4_Mettur_Dam` - 11.7870, 77.8008
-- `C5_Thanjavur_Delta` - 10.7867, 79.1378
-
-## Model Inputs
-
-Raw weather variables:
-
-- `temperature`
-- `humidity`
-- `rainfall`
-- `pressure`
-- `wind_speed`
-- `cloud_cover`
-
-Engineered variables:
-
-- 1, 2, and 3 hour lag features for each raw variable.
-- 3 hour rolling averages for rainfall, humidity, and temperature.
-- Pressure, humidity, temperature, and wind change features.
-- Hour, day, and month time features.
-- `rainfall_next_hour` regression target.
-- `rainfall_class` category for no, light, moderate, and heavy rainfall.
-
-## Sediment Hotspot Module
-
-The sediment system combines rainfall predictions with:
-
-- Sentinel-2 or Landsat imagery
-- River flow and inflow sequences
-- DEM terrain features
-- Land-use features
-
-See `SEDIMENT_HOTSPOT.md` for the public data sources, preprocessing commands, training manifest, inference workflow, and dashboard command.
-
-## References
-
-- Open-Meteo: https://open-meteo.com/
-- XGBoost: https://xgboost.readthedocs.io/
-- PyTorch: https://pytorch.org/
+## 4. Evaluation Outputs
+- `results/baseline_results.csv`: Comparison across Random Forest, XGBoost, CNN-only, BiLSTM-only, CNN+BiLSTM, Standard Attention, and Proposed Full Model on an identical test split.
+- `results/ablation_results.csv`: Step-by-step ablation metrics validating the marginal contribution of each proposed algorithm.
+- `data/outputs/`: Inference maps (`future_sediment_hotspot_heatmap.npy`, `dsdi_heatmap.npy`, `uncertainty_heatmap.npy`, `zone_sediment_risk.csv`, `modality_attention.csv`, `causal_attention.csv`, `risk_timeline.csv`, `prediction_metadata.json`).

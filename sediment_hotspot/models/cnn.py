@@ -8,18 +8,21 @@ class SpatialCNN(nn.Module):
         self.encoder = nn.Sequential(
             nn.Conv2d(in_channels, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             nn.MaxPool2d(2),
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
             nn.MaxPool2d(2),
             nn.Conv2d(64, out_features, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_features),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace=False),
         )
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         features = self.encoder(x)
         return self.pool(features).flatten(1)
+
+    def extract_features(self, x: torch.Tensor) -> torch.Tensor:
+        return self.encoder(x)

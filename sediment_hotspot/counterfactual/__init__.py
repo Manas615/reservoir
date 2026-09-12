@@ -1,0 +1,4 @@
+from sediment_hotspot.counterfactual.interventions import apply_intervention, generate_counterfactual_batch
+from sediment_hotspot.counterfactual.counterfactual import predict_counterfactual, CounterfactualPrediction
+from sediment_hotspot.counterfactual.sensitivity import compute_spatial_sensitivity, zone_sensitivity_analysis
+from sediment_hotspot.counterfactual.scenario_engine import run_all_scenarios, STANDARD_SCENARIOS

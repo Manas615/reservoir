@@ -1,0 +1,13 @@
+\begin{tabular}{llll}
+\toprule
+Modality & Dimensions / Shape & Temporal Frequency & Provenance \\
+\midrule
+Satellite (Sentinel-2 / NDTI) & [6, 128, 128] & 5–10 days & DERIVED_FROM_SATELLITE \\
+DEM Morphometry (SRTM) & [4, 128, 128] & Static & PHYSICS_DERIVED \\
+Land-Use (ESA WorldCover) & [5, 128, 128] & Annual / Static & DERIVED_FROM_SATELLITE \\
+Flow Sequences & [10, 8] & Hourly / Daily & REAL_OBSERVATION \\
+Rainfall Forcing & [4] & Hourly Forecast & REAL_OBSERVATION \\
+Graph Connectivity & [5, 8] & Topological & PHYSICS_DERIVED \\
+DSDI Prior & [11] & Dynamic Gated & PHYSICS_DERIVED \\
+\bottomrule
+\end{tabular}
